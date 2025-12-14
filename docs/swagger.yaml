@@ -1,0 +1,235 @@
+basePath: /
+definitions:
+  handlers.AnalyseResponse:
+    properties:
+      detected_from:
+        type: string
+      error:
+        type: string
+      focal_length:
+        type: number
+      fov:
+        $ref: '#/definitions/handlers.FOVData'
+      has_exif:
+        type: boolean
+      make:
+        type: string
+      model:
+        type: string
+      scale_high:
+        type: number
+      scale_low:
+        type: number
+      scale_units:
+        type: string
+      sensor_name:
+        type: string
+      success:
+        type: boolean
+    type: object
+  handlers.FOVData:
+    properties:
+      diagonal_degrees:
+        type: number
+      height_arcmin:
+        type: number
+      height_degrees:
+        type: number
+      width_arcmin:
+        type: number
+      width_degrees:
+        type: number
+    type: object
+  handlers.HealthResponse:
+    properties:
+      status:
+        type: string
+      uptime_seconds:
+        type: number
+      version:
+        type: string
+    type: object
+  handlers.SolveResponse:
+    properties:
+      dec:
+        type: number
+      error:
+        type: string
+      field_height:
+        type: number
+      field_width:
+        type: number
+      pixel_scale:
+        type: number
+      ra:
+        type: number
+      rotation:
+        type: number
+      solve_time:
+        type: number
+      solved:
+        type: boolean
+      wcs_header:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: API Support
+    url: https://github.com/DiarmuidKelly/Astrometry-API-Server
+  description: REST API for astronomical image plate-solving using Astrometry.net
+  license:
+    name: GPL-3.0
+    url: https://www.gnu.org/licenses/gpl-3.0.en.html
+  termsOfService: http://swagger.io/terms/
+  title: Astrometry API Server
+  version: 0.1.0
+paths:
+  /analyse:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Extracts camera information from EXIF data and calculates field
+        of view. Returns recommended scale parameters for plate-solving. This is a
+        fast operation (< 1 second) that does NOT perform plate-solving.
+      parameters:
+      - description: Image file (JPG, JPEG, PNG with EXIF)
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Analysis complete
+          schema:
+            $ref: '#/definitions/handlers.AnalyseResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/handlers.AnalyseResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "413":
+          description: File too large
+          schema:
+            type: string
+      summary: Analyse image EXIF and calculate FOV
+      tags:
+      - Analysis
+  /health:
+    get:
+      description: Returns server health status and uptime
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Server is healthy
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+      summary: Health check
+      tags:
+      - Health
+  /solve:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 'Performs plate-solving to determine celestial coordinates and
+        orientation. Recommended: First call /analyse to get optimal scale parameters
+        for 3-5x faster solving.'
+      parameters:
+      - description: Image file (JPG, JPEG, PNG, FITS, FIT)
+        in: formData
+        name: image
+        required: true
+        type: file
+      - description: Lower bound of image scale
+        in: formData
+        name: scale_low
+        type: number
+      - description: Upper bound of image scale
+        in: formData
+        name: scale_high
+        type: number
+      - default: arcminwidth
+        description: Units for scale bounds (degwidth, arcminwidth, arcsecperpix)
+        in: formData
+        name: scale_units
+        type: string
+      - default: 2
+        description: Downsample factor (higher = faster but less accurate)
+        in: formData
+        name: downsample_factor
+        type: integer
+      - default: 10
+        description: Minimum number of quads to try
+        in: formData
+        name: depth_low
+        type: integer
+      - default: 20
+        description: Maximum number of quads to try
+        in: formData
+        name: depth_high
+        type: integer
+      - description: Right Ascension hint in degrees (J2000)
+        in: formData
+        name: ra
+        type: number
+      - description: Declination hint in degrees (J2000)
+        in: formData
+        name: dec
+        type: number
+      - description: Search radius in degrees (requires ra/dec)
+        in: formData
+        name: radius
+        type: number
+      - default: false
+        description: Preserve temporary files for debugging
+        in: formData
+        name: keep_temp_files
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Solve complete (check solved field)
+          schema:
+            $ref: '#/definitions/handlers.SolveResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/handlers.SolveResponse'
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "413":
+          description: File too large
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.SolveResponse'
+      summary: Plate-solve an astronomical image
+      tags:
+      - Solving
+schemes:
+- http
+swagger: "2.0"
+tags:
+- description: Image analysis and FOV calculation
+  name: Analysis
+- description: Plate-solving operations
+  name: Solving
+- description: Server health and status
+  name: Health

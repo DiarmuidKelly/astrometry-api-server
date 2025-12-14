@@ -1,0 +1,350 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "REST API for astronomical image plate-solving using Astrometry.net",
+        "title": "Astrometry API Server",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "https://github.com/DiarmuidKelly/Astrometry-API-Server"
+        },
+        "license": {
+            "name": "GPL-3.0",
+            "url": "https://www.gnu.org/licenses/gpl-3.0.en.html"
+        },
+        "version": "0.1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/analyse": {
+            "post": {
+                "description": "Extracts camera information from EXIF data and calculates field of view. Returns recommended scale parameters for plate-solving. This is a fast operation (\u003c 1 second) that does NOT perform plate-solving.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Analysis"
+                ],
+                "summary": "Analyse image EXIF and calculate FOV",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Image file (JPG, JPEG, PNG with EXIF)",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Analysis complete",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AnalyseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AnalyseResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "413": {
+                        "description": "File too large",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Returns server health status and uptime",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "Server is healthy",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.HealthResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/solve": {
+            "post": {
+                "description": "Performs plate-solving to determine celestial coordinates and orientation. Recommended: First call /analyse to get optimal scale parameters for 3-5x faster solving.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Solving"
+                ],
+                "summary": "Plate-solve an astronomical image",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Image file (JPG, JPEG, PNG, FITS, FIT)",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Lower bound of image scale",
+                        "name": "scale_low",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Upper bound of image scale",
+                        "name": "scale_high",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "arcminwidth",
+                        "description": "Units for scale bounds (degwidth, arcminwidth, arcsecperpix)",
+                        "name": "scale_units",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 2,
+                        "description": "Downsample factor (higher = faster but less accurate)",
+                        "name": "downsample_factor",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Minimum number of quads to try",
+                        "name": "depth_low",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Maximum number of quads to try",
+                        "name": "depth_high",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Right Ascension hint in degrees (J2000)",
+                        "name": "ra",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Declination hint in degrees (J2000)",
+                        "name": "dec",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "Search radius in degrees (requires ra/dec)",
+                        "name": "radius",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Preserve temporary files for debugging",
+                        "name": "keep_temp_files",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Solve complete (check solved field)",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SolveResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SolveResponse"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "413": {
+                        "description": "File too large",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.SolveResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "handlers.AnalyseResponse": {
+            "type": "object",
+            "properties": {
+                "detected_from": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "focal_length": {
+                    "type": "number"
+                },
+                "fov": {
+                    "$ref": "#/definitions/handlers.FOVData"
+                },
+                "has_exif": {
+                    "type": "boolean"
+                },
+                "make": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "scale_high": {
+                    "type": "number"
+                },
+                "scale_low": {
+                    "type": "number"
+                },
+                "scale_units": {
+                    "type": "string"
+                },
+                "sensor_name": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "handlers.FOVData": {
+            "type": "object",
+            "properties": {
+                "diagonal_degrees": {
+                    "type": "number"
+                },
+                "height_arcmin": {
+                    "type": "number"
+                },
+                "height_degrees": {
+                    "type": "number"
+                },
+                "width_arcmin": {
+                    "type": "number"
+                },
+                "width_degrees": {
+                    "type": "number"
+                }
+            }
+        },
+        "handlers.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                },
+                "uptime_seconds": {
+                    "type": "number"
+                },
+                "version": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.SolveResponse": {
+            "type": "object",
+            "properties": {
+                "dec": {
+                    "type": "number"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "field_height": {
+                    "type": "number"
+                },
+                "field_width": {
+                    "type": "number"
+                },
+                "pixel_scale": {
+                    "type": "number"
+                },
+                "ra": {
+                    "type": "number"
+                },
+                "rotation": {
+                    "type": "number"
+                },
+                "solve_time": {
+                    "type": "number"
+                },
+                "solved": {
+                    "type": "boolean"
+                },
+                "wcs_header": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "description": "Image analysis and FOV calculation",
+            "name": "Analysis"
+        },
+        {
+            "description": "Plate-solving operations",
+            "name": "Solving"
+        },
+        {
+            "description": "Server health and status",
+            "name": "Health"
+        }
+    ]
+}

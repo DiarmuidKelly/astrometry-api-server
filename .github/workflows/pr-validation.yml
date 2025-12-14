@@ -1,0 +1,65 @@
+name: PR Title Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR Title
+        id: validate
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $PR_TITLE"
+
+          # Check for version prefix
+          if [[ "$PR_TITLE" =~ ^\[(MAJOR|MINOR|PATCH)\] ]]; then
+            echo "✅ Valid version prefix found"
+            echo "valid=true" >> $GITHUB_OUTPUT
+            echo "message=Valid PR title with version prefix" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check for conventional commit format
+          if [[ "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: ]]; then
+            echo "✅ Valid conventional commit format"
+            echo "valid=true" >> $GITHUB_OUTPUT
+            echo "message=Valid conventional commit format (will skip release)" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check for skip-release prefix
+          if [[ "$PR_TITLE" =~ ^\[skip-release\] ]]; then
+            echo "✅ Skip release prefix found"
+            echo "valid=true" >> $GITHUB_OUTPUT
+            echo "message=Skip release - no version bump" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Invalid format
+          echo "❌ Invalid PR title format"
+          echo "valid=false" >> $GITHUB_OUTPUT
+          echo "message=Invalid PR title. Use [MAJOR], [MINOR], [PATCH], [skip-release], or conventional commit format" >> $GITHUB_OUTPUT
+          exit 1
+
+      - name: Comment PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const valid = '${{ steps.validate.outputs.valid }}' === 'true';
+            const message = `${{ steps.validate.outputs.message }}`;
+
+            const body = valid
+              ? `✅ **PR Title Validation Passed**\n\n${message}`
+              : `❌ **PR Title Validation Failed**\n\n${message}\n\n**Required formats:**\n- \`[MAJOR] description\` - Breaking changes (1.0.0 → 2.0.0)\n- \`[MINOR] description\` - New features (1.0.0 → 1.1.0)\n- \`[PATCH] description\` - Bug fixes (1.0.0 → 1.0.1)\n- \`[skip-release] description\` - No release\n- \`feat: description\` - Conventional commit (no release)\n\n**Examples:**\n- \`[MINOR] Add batch solving endpoint\`\n- \`[PATCH] Fix CORS headers\`\n- \`docs: Update API documentation\``;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
