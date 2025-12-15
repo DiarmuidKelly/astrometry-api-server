@@ -25,7 +25,7 @@ const docTemplate = `{
     "paths": {
         "/analyse": {
             "post": {
-                "description": "Extracts camera information from EXIF data and calculates field of view. Returns recommended scale parameters for plate-solving. This is a fast operation (\u003c 1 second) that does NOT perform plate-solving.",
+                "description": "Extracts camera information from EXIF data and calculates field of view. Returns recommended scale parameters for use with the offline Astrometry.net plate-solving engine. This is a fast operation (\u003c 1 second) that does NOT perform plate-solving.",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -61,13 +61,13 @@ const docTemplate = `{
                     "405": {
                         "description": "Method not allowed",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.AnalyseResponse"
                         }
                     },
                     "413": {
                         "description": "File too large",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.AnalyseResponse"
                         }
                     }
                 }
@@ -101,7 +101,7 @@ const docTemplate = `{
         },
         "/solve": {
             "post": {
-                "description": "Performs plate-solving to determine celestial coordinates and orientation. Recommended: First call /analyse to get optimal scale parameters for 3-5x faster solving.",
+                "description": "Performs plate-solving using the offline Astrometry.net solving engine to determine celestial coordinates and orientation. Recommended: First call /analyse to get optimal scale parameters for 3-5x faster solving.",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -111,7 +111,7 @@ const docTemplate = `{
                 "tags": [
                     "Solving"
                 ],
-                "summary": "Plate-solve an astronomical image",
+                "summary": "Plate-solve an astronomical image using offline Astrometry.net engine",
                 "parameters": [
                     {
                         "type": "file",
@@ -202,13 +202,13 @@ const docTemplate = `{
                     "405": {
                         "description": "Method not allowed",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.SolveResponse"
                         }
                     },
                     "413": {
                         "description": "File too large",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/handlers.SolveResponse"
                         }
                     },
                     "500": {
@@ -317,6 +317,9 @@ const docTemplate = `{
                 },
                 "ra": {
                     "type": "number"
+                },
+                "raw_output": {
+                    "type": "string"
                 },
                 "rotation": {
                     "type": "number"

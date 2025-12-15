@@ -1,61 +1,105 @@
+version: "2"
 run:
-  timeout: 5m
   tests: true
-  modules-download-mode: readonly
-
 linters:
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
-    - gofmt
-    - goimports
+    - dupl
+    - goconst
     - misspell
-    - revive
-    - unconvert
-    - unparam
-    - whitespace
-
+    - nakedret
+    - prealloc
   disable:
-    - typecheck # Can be flaky with generics
-
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-
-  gofmt:
-    simplify: true
-
-  goimports:
-    local-prefixes: github.com/DiarmuidKelly/astrometry-api-server
-
-  revive:
+    - exhaustive
+    - exhaustruct
+    - gochecknoglobals
+    - gochecknoinits
+    - gocyclo
+    - gosec
+    - revive
+    - wsl
+  settings:
+    dupl:
+      threshold: 100
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    gocyclo:
+      min-complexity: 15
+    gosec:
+      excludes:
+        - G204
+        - G304
+        - G306
+    govet:
+      disable:
+        - shadow
+      enable-all: true
+    lll:
+      line-length: 120
+      tab-width: 4
+    misspell:
+      locale: US
+    nakedret:
+      max-func-lines: 30
+    prealloc:
+      simple: true
+      range-loops: true
+      for-loops: false
+    unparam:
+      check-exported: false
+  exclusions:
+    generated: lax
     rules:
-      - name: exported
-        disabled: false
-      - name: package-comments
-        disabled: true
-
-  misspell:
-    locale: US
-
+      - linters:
+          - dupl
+          - errcheck
+          - gocyclo
+          - gosec
+          - lll
+        path: _test\.go
+      - linters:
+          - revive
+        path: examples/
+      - linters:
+          - gosec
+          - revive
+          - staticcheck
+        path: vendor/
+      - linters:
+          - gosec
+        text: 'G304:'
+      - linters:
+          - gosec
+        text: 'G204:'
+      - linters:
+          - gosec
+        text: 'G306:'
+      - linters:
+          - govet
+        text: 'fieldalignment:'
+      - linters:
+          - misspell
+        text: '`[Aa]nalyse` is a misspelling of `[Aa]nalyze`'
+      - linters:
+          - misspell
+        text: '`[Aa]nalysing` is a misspelling of `[Aa]nalyzing`'
+    paths:
+      - vendor
+      - .github
+      - scripts
+      - third_party$
+      - builtin$
+      - examples$
 issues:
-  exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
-
-  exclude-rules:
-    # Exclude some linters from running on tests files
-    - path: _test\.go
-      linters:
-        - errcheck
-        - unparam
-
-    # Exclude certain revive rules
-    - linters:
-        - revive
-      text: "should have a package comment"
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

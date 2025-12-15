@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,14 +15,19 @@ import (
 	client "github.com/DiarmuidKelly/astrometry-go-client"
 )
 
+// AstrometryClient interface for testing
+type AstrometryClient interface {
+	Solve(ctx context.Context, imagePath string, opts *client.SolveOptions) (*client.Result, error)
+}
+
 // SolveHandler handles plate-solving requests
 type SolveHandler struct {
-	client        *client.Client
+	client        AstrometryClient
 	maxUploadSize int64
 }
 
 // NewSolveHandler creates a new solve handler
-func NewSolveHandler(c *client.Client, maxUploadSize int64) *SolveHandler {
+func NewSolveHandler(c AstrometryClient, maxUploadSize int64) *SolveHandler {
 	return &SolveHandler{
 		client:        c,
 		maxUploadSize: maxUploadSize,
@@ -58,8 +64,8 @@ type SolveResponse struct {
 
 // ServeHTTP godoc
 //
-//	@Summary		Plate-solve an astronomical image
-//	@Description	Performs plate-solving to determine celestial coordinates and orientation. Recommended: First call /analyse to get optimal scale parameters for 3-5x faster solving.
+//	@Summary		Plate-solve an astronomical image using offline Astrometry.net engine
+//	@Description	Performs plate-solving using the offline Astrometry.net solving engine to determine celestial coordinates and orientation. Recommended: First call /analyse to get optimal scale parameters for 3-5x faster solving.
 //	@Tags			Solving
 //	@Accept			multipart/form-data
 //	@Produce		json
@@ -76,13 +82,13 @@ type SolveResponse struct {
 //	@Param			keep_temp_files		formData	boolean			false	"Preserve temporary files for debugging"	default(false)
 //	@Success		200					{object}	SolveResponse	"Solve complete (check solved field)"
 //	@Failure		400					{object}	SolveResponse	"Bad request"
-//	@Failure		405					{string}	string			"Method not allowed"
-//	@Failure		413					{string}	string			"File too large"
+//	@Failure		405					{object}	SolveResponse	"Method not allowed"
+//	@Failure		413					{object}	SolveResponse	"File too large"
 //	@Failure		500					{object}	SolveResponse	"Internal server error"
 //	@Router			/solve [post]
 func (h *SolveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		respondError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -101,7 +107,7 @@ func (h *SolveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Missing or invalid 'image' field", http.StatusBadRequest)
 		return
 	}
-	defer file.Close()
+	defer file.Close() //nolint:errcheck // Error from Close on read is not critical
 
 	// Validate file extension
 	ext := strings.ToLower(filepath.Ext(header.Filename))
@@ -114,20 +120,23 @@ func (h *SolveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Save to temporary file in shared directory (must match client's TempDir config)
 	tempDir := "/shared-data"
 	tempFile := filepath.Join(tempDir, fmt.Sprintf("astro_%d%s", os.Getpid(), ext))
-	defer os.Remove(tempFile)
+	defer os.Remove(tempFile) //nolint:errcheck // Cleanup failure is not critical
 
 	out, err := os.Create(tempFile)
 	if err != nil {
 		respondError(w, "Failed to save file", http.StatusInternalServerError)
 		return
 	}
-	defer out.Close()
+	defer out.Close() //nolint:errcheck // Deferred close errors are not critical
 
 	if _, err := io.Copy(out, file); err != nil {
 		respondError(w, "Failed to save file", http.StatusInternalServerError)
 		return
 	}
-	out.Close()
+	if err := out.Close(); err != nil {
+		respondError(w, "Failed to save file", http.StatusInternalServerError)
+		return
+	}
 
 	// Parse solve options from form fields
 	opts := h.parseSolveOptions(r)
@@ -227,7 +236,7 @@ func (h *SolveHandler) parseSolveOptions(r *http.Request) *client.SolveOptions {
 func respondError(w http.ResponseWriter, message string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(&SolveResponse{
+	_ = json.NewEncoder(w).Encode(&SolveResponse{ //nolint:errcheck // Already in error path, encoding failure indicates connection issue
 		Solved: false,
 		Error:  message,
 	})

@@ -7,9 +7,6 @@ RUN apk add --no-cache git make
 # Set working directory
 WORKDIR /build
 
-# Copy the local astrometry-go-client dependency first
-COPY astrometry-go-client /astrometry-go-client
-
 # Copy go mod files
 COPY astrometry-api-server/go.mod ./
 COPY astrometry-api-server/go.sum* ./

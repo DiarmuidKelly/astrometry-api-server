@@ -1,4 +1,4 @@
-.PHONY: help build test lint clean docker-build docker-run docker-stop install dev
+.PHONY: help build test lint clean docker-build docker-run docker-stop install dev local-test
 
 # Default target
 .DEFAULT_GOAL := help
@@ -61,16 +61,16 @@ docker-build: ## Build Docker image
 
 docker-run: ## Run Docker container
 	@echo "Starting Docker container..."
-	docker-compose up -d
+	docker compose up -d
 	@echo "Container started on http://localhost:$(PORT)"
 
 docker-stop: ## Stop Docker container
 	@echo "Stopping Docker container..."
-	docker-compose down
+	docker compose down
 	@echo "Container stopped"
 
 docker-logs: ## View Docker container logs
-	docker-compose logs -f
+	docker compose logs -f
 
 install: build ## Install binary to GOPATH/bin
 	@echo "Installing $(BINARY_NAME)..."
@@ -100,6 +100,24 @@ swagger: ## Generate Swagger documentation from godoc comments
 	@echo "Generating Swagger documentation..."
 	@swag init -g cmd/server/main.go --output ./docs
 	@echo "Swagger docs generated at docs/swagger.yaml"
+
+local-test: ## Build Docker, run integration tests locally (like CI)
+	@echo "Running local integration tests..."
+	@echo "Building Docker images..."
+	docker compose build
+	@echo "Starting containers..."
+	docker compose up -d
+	@echo "Waiting for services to be ready..."
+	@sleep 5
+	@echo "Running health check..."
+	@curl -f http://localhost:$(PORT)/health || (docker compose logs && docker compose down && exit 1)
+	@echo "Health check passed"
+	@echo "Running unit tests with /shared-data available..."
+	@docker run --rm -v astrometry-shared:/shared-data -v $(PWD):/src -w /src golang:alpine sh -c "apk add --no-cache git make && go test -v -race -coverprofile=coverage-docker.out ./..." || (docker compose down && exit 1)
+	@echo "Integration tests complete!"
+	@echo "Stopping containers..."
+	@docker compose down
+	@echo "Local integration test complete"
 
 all: clean lint test build ## Run all checks and build
 	@echo "All tasks complete"

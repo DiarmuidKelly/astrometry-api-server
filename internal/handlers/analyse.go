@@ -53,19 +53,19 @@ type FOVData struct {
 // ServeHTTP godoc
 //
 //	@Summary		Analyse image EXIF and calculate FOV
-//	@Description	Extracts camera information from EXIF data and calculates field of view. Returns recommended scale parameters for plate-solving. This is a fast operation (< 1 second) that does NOT perform plate-solving.
+//	@Description	Extracts camera information from EXIF data and calculates field of view. Returns recommended scale parameters for use with the offline Astrometry.net plate-solving engine. This is a fast operation (< 1 second) that does NOT perform plate-solving.
 //	@Tags			Analysis
 //	@Accept			multipart/form-data
 //	@Produce		json
 //	@Param			image	formData	file				true	"Image file (JPG, JPEG, PNG with EXIF)"
 //	@Success		200		{object}	AnalyseResponse		"Analysis complete"
 //	@Failure		400		{object}	AnalyseResponse		"Bad request"
-//	@Failure		405		{string}	string				"Method not allowed"
-//	@Failure		413		{string}	string				"File too large"
+//	@Failure		405		{object}	AnalyseResponse		"Method not allowed"
+//	@Failure		413		{object}	AnalyseResponse		"File too large"
 //	@Router			/analyse [post]
 func (h *AnalyseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		respondAnalyseError(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -84,7 +84,7 @@ func (h *AnalyseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		respondAnalyseError(w, "Missing or invalid 'image' field", http.StatusBadRequest)
 		return
 	}
-	defer file.Close()
+	defer file.Close() //nolint:errcheck // Error from Close on read is not critical
 
 	// Validate file extension
 	ext := strings.ToLower(filepath.Ext(header.Filename))
@@ -97,20 +97,23 @@ func (h *AnalyseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Save to temporary file in shared directory (must match client's TempDir config)
 	tempDir := "/shared-data"
 	tempFile := filepath.Join(tempDir, fmt.Sprintf("analyse_%d%s", os.Getpid(), ext))
-	defer os.Remove(tempFile)
+	defer os.Remove(tempFile) //nolint:errcheck // Cleanup failure is not critical
 
 	out, err := os.Create(tempFile)
 	if err != nil {
 		respondAnalyseError(w, "Failed to save file", http.StatusInternalServerError)
 		return
 	}
-	defer out.Close()
+	defer out.Close() //nolint:errcheck // Deferred close errors are not critical
 
 	if _, err := io.Copy(out, file); err != nil {
 		respondAnalyseError(w, "Failed to save file", http.StatusInternalServerError)
 		return
 	}
-	out.Close()
+	if err := out.Close(); err != nil {
+		respondAnalyseError(w, "Failed to save file", http.StatusInternalServerError)
+		return
+	}
 
 	// Analyse the image
 	log.Printf("Analysing image: %s (%.2f KB)", header.Filename, float64(header.Size)/1024)
@@ -158,7 +161,7 @@ func (h *AnalyseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func respondAnalyseError(w http.ResponseWriter, message string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(&AnalyseResponse{
+	_ = json.NewEncoder(w).Encode(&AnalyseResponse{ //nolint:errcheck // Already in error path, encoding failure indicates connection issue
 		Success: false,
 		Error:   message,
 	})
