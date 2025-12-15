@@ -1,4 +1,4 @@
-.PHONY: help build test lint clean docker-build docker-run docker-stop install dev local-test
+.PHONY: help build test test-unit test-integration test-all lint clean docker-build docker-run docker-stop install dev local-test
 
 # Default target
 .DEFAULT_GOAL := help
@@ -20,12 +20,14 @@ build: ## Build the server binary
 	go build -o bin/$(BINARY_NAME) ./cmd/server
 	@echo "Build complete: bin/$(BINARY_NAME)"
 
-test: ## Run tests
-	@echo "Running tests..."
-	go test -v -race -coverprofile=coverage.out ./...
-	@echo "Tests complete"
+test-unit: ## Run unit tests only (fast, skips tests requiring Docker)
+	@echo "Running unit tests..."
+	go test -v -race -short -coverprofile=coverage.out ./...
+	@echo "Unit tests complete"
 
-test-coverage: test ## Run tests and show coverage report
+test: test-unit ## Run unit tests (alias for test-unit)
+
+test-coverage: test-unit ## Run tests and show coverage report
 	@echo "Generating coverage report..."
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report: coverage.html"
@@ -101,8 +103,8 @@ swagger: ## Generate Swagger documentation from godoc comments
 	@swag init -g cmd/server/main.go --output ./docs
 	@echo "Swagger docs generated at docs/swagger.yaml"
 
-local-test: ## Build Docker, run integration tests locally (like CI)
-	@echo "Running local integration tests..."
+test-integration: ## Run integration tests (requires Docker)
+	@echo "Running integration tests..."
 	@echo "Building Docker images..."
 	docker compose build
 	@echo "Starting containers..."
@@ -112,12 +114,17 @@ local-test: ## Build Docker, run integration tests locally (like CI)
 	@echo "Running health check..."
 	@curl -f http://localhost:$(PORT)/health || (docker compose logs && docker compose down && exit 1)
 	@echo "Health check passed"
-	@echo "Running unit tests with /shared-data available..."
+	@echo "Running tests with /shared-data available..."
 	@docker run --rm -v astrometry-shared:/shared-data -v $(PWD):/src -w /src golang:alpine sh -c "apk add --no-cache git make && go test -v -coverprofile=coverage-docker.out ./..." || (docker compose down && exit 1)
 	@echo "Integration tests complete!"
 	@echo "Stopping containers..."
 	@docker compose down
-	@echo "Local integration test complete"
+	@echo "Integration tests complete"
+
+test-all: test-unit test-integration ## Run all tests (unit + integration)
+	@echo "All tests complete"
+
+local-test: test-integration ## Alias for test-integration (kept for compatibility)
 
 all: clean lint test build ## Run all checks and build
 	@echo "All tasks complete"
