@@ -10,60 +10,120 @@ permissions:
 
 jobs:
   validate-pr-title:
+    name: Validate PR Title Format
     runs-on: ubuntu-latest
+
     steps:
-      - name: Validate PR Title
-        id: validate
-        run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          echo "PR Title: $PR_TITLE"
-
-          # Check for version prefix
-          if [[ "$PR_TITLE" =~ ^\[(MAJOR|MINOR|PATCH)\] ]]; then
-            echo "✅ Valid version prefix found"
-            echo "valid=true" >> $GITHUB_OUTPUT
-            echo "message=Valid PR title with version prefix" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Check for conventional commit format
-          if [[ "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: ]]; then
-            echo "✅ Valid conventional commit format"
-            echo "valid=true" >> $GITHUB_OUTPUT
-            echo "message=Valid conventional commit format (will skip release)" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Check for skip-release prefix
-          if [[ "$PR_TITLE" =~ ^\[skip-release\] ]]; then
-            echo "✅ Skip release prefix found"
-            echo "valid=true" >> $GITHUB_OUTPUT
-            echo "message=Skip release - no version bump" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Invalid format
-          echo "❌ Invalid PR title format"
-          echo "valid=false" >> $GITHUB_OUTPUT
-          echo "message=Invalid PR title. Use [MAJOR], [MINOR], [PATCH], [skip-release], or conventional commit format" >> $GITHUB_OUTPUT
-          exit 1
-
-      - name: Comment PR
-        if: always()
+      - name: Check PR title format
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const valid = '${{ steps.validate.outputs.valid }}' === 'true';
-            const message = `${{ steps.validate.outputs.message }}`;
+            const title = context.payload.pull_request.title;
 
-            const body = valid
-              ? `✅ **PR Title Validation Passed**\n\n${message}`
-              : `❌ **PR Title Validation Failed**\n\n${message}\n\n**Required formats:**\n- \`[MAJOR] description\` - Breaking changes (1.0.0 → 2.0.0)\n- \`[MINOR] description\` - New features (1.0.0 → 1.1.0)\n- \`[PATCH] description\` - Bug fixes (1.0.0 → 1.0.1)\n- \`[skip-release] description\` - No release\n- \`feat: description\` - Conventional commit (no release)\n\n**Examples:**\n- \`[MINOR] Add batch solving endpoint\`\n- \`[PATCH] Fix CORS headers\`\n- \`docs: Update API documentation\``;
+            // Valid patterns:
+            // [MAJOR] description - Breaking changes
+            // [MINOR] description - New features
+            // [PATCH] description - Bug fixes
+            // [SKIP] description - No release (docs/chore only)
+            // feat: description - Auto-detected as MINOR
+            // fix: description - Auto-detected as PATCH
+            // docs: description - Auto-detected as SKIP
+            // chore: description - Auto-detected as SKIP
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
+            const patterns = [
+              { regex: /^\[MAJOR\]\s+.+/, type: 'MAJOR', emoji: '🚨' },
+              { regex: /^\[MINOR\]\s+.+/, type: 'MINOR', emoji: '✨' },
+              { regex: /^\[PATCH\]\s+.+/, type: 'PATCH', emoji: '🐛' },
+              { regex: /^\[SKIP\]\s+.+/, type: 'SKIP', emoji: '⏭️' },
+              { regex: /^\[skip-release\]\s+.+/, type: 'SKIP', emoji: '⏭️' },
+              { regex: /^feat(\(.+\))?:\s+.+/, type: 'MINOR (auto)', emoji: '✨' },
+              { regex: /^fix(\(.+\))?:\s+.+/, type: 'PATCH (auto)', emoji: '🐛' },
+              { regex: /^docs(\(.+\))?:\s+.+/, type: 'SKIP (auto)', emoji: '📚' },
+              { regex: /^chore(\(.+\))?:\s+.+/, type: 'SKIP (auto)', emoji: '🔧' },
+              { regex: /^style(\(.+\))?:\s+.+/, type: 'SKIP (auto)', emoji: '💄' },
+              { regex: /^refactor(\(.+\))?:\s+.+/, type: 'PATCH (auto)', emoji: '♻️' },
+              { regex: /^perf(\(.+\))?:\s+.+/, type: 'PATCH (auto)', emoji: '⚡' },
+              { regex: /^test(\(.+\))?:\s+.+/, type: 'SKIP (auto)', emoji: '✅' },
+              { regex: /^build(\(.+\))?:\s+.+/, type: 'SKIP (auto)', emoji: '🏗️' },
+              { regex: /^ci(\(.+\))?:\s+.+/, type: 'SKIP (auto)', emoji: '👷' },
+              { regex: /^revert(\(.+\))?:\s+.+/, type: 'PATCH (auto)', emoji: '⏪' },
+            ];
+
+            let matched = false;
+            let matchedPattern = null;
+
+            for (const pattern of patterns) {
+              if (pattern.regex.test(title)) {
+                matched = true;
+                matchedPattern = pattern;
+                break;
+              }
+            }
+
+            if (matched) {
+              // Valid format
+              const message = `${matchedPattern.emoji} **PR Title Valid**\n\n` +
+                `Title: \`${title}\`\n` +
+                `Version bump: **${matchedPattern.type}**\n\n` +
+                `When this PR is merged, it will trigger a **${matchedPattern.type}** release.`;
+
+              core.info(message);
+
+              // Post comment with validation result
+              const comments = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+
+              const botComment = comments.data.find(comment =>
+                comment.user.type === 'Bot' &&
+                comment.body.includes('PR Title Valid')
+              );
+
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: message
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: message
+                });
+              }
+            } else {
+              // Invalid format
+              const errorMessage = `❌ **PR Title Invalid**\n\n` +
+                `Current title: \`${title}\`\n\n` +
+                `**Required format:**\n` +
+                `- \`[MAJOR] description\` - Breaking changes (0.1.0 → 1.0.0)\n` +
+                `- \`[MINOR] description\` - New features (0.1.0 → 0.2.0)\n` +
+                `- \`[PATCH] description\` - Bug fixes (0.1.0 → 0.1.1)\n` +
+                `- \`[SKIP] description\` - No release (docs/chore only)\n\n` +
+                `**Or use conventional commits:**\n` +
+                `- \`feat: description\` - Auto-detected as MINOR\n` +
+                `- \`fix: description\` - Auto-detected as PATCH\n` +
+                `- \`docs: description\` - Auto-detected as SKIP\n` +
+                `- \`chore: description\` - Auto-detected as SKIP\n\n` +
+                `**Examples:**\n` +
+                `- ✅ \`[MAJOR] Remove deprecated API endpoints\`\n` +
+                `- ✅ \`[MINOR] Add batch solving endpoint\`\n` +
+                `- ✅ \`[PATCH] Fix CORS headers\`\n` +
+                `- ✅ \`feat: add image analysis endpoint\`\n` +
+                `- ✅ \`fix: correct WCS header parsing\`\n` +
+                `- ✅ \`[SKIP] Update documentation\``;
+
+              core.setFailed(errorMessage);
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: errorMessage
+              });
+            }

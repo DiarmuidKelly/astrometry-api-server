@@ -67,10 +67,10 @@ cp .env.example .env
 # Edit .env and set ASTROMETRY_INDEX_PATH
 
 # Start the server
-docker-compose up -d
+docker compose up -d
 
 # View logs
-docker-compose logs -f api
+docker compose logs -f api
 ```
 
 ### Building from Source
@@ -95,6 +95,10 @@ export ASTROMETRY_INDEX_PATH=/path/to/astrometry-data
 
 ## API Reference
 
+### Interactive API Documentation
+
+Swagger UI available at `http://localhost:8080/swagger/index.html` when server is running.
+
 ### Endpoints
 
 #### `GET /health`
@@ -110,6 +114,46 @@ Health check endpoint.
   "version": "0.1.0"
 }
 ```
+
+#### `POST /analyse`
+
+Analyze image EXIF data and calculate field of view. This is a fast operation (<1 second) that extracts camera information and recommends optimal scale parameters for plate-solving.
+
+**Request:**
+
+- Method: `POST`
+- Content-Type: `multipart/form-data`
+- Max upload size: 50 MB
+
+**Form Fields:**
+
+| Field   | Type | Required | Description                   |
+| ------- | ---- | -------- | ----------------------------- |
+| `image` | file | Yes      | Image file (JPG, PNG with EXIF) |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "make": "Canon",
+  "model": "EOS 6D",
+  "focal_length": 200,
+  "sensor_name": "Canon EOS 6D",
+  "fov": {
+    "width_degrees": 6.87,
+    "height_degrees": 4.58,
+    "width_arcmin": 412.2,
+    "height_arcmin": 274.8
+  },
+  "scale_low": 320.5,
+  "scale_high": 460.2,
+  "scale_units": "arcminwidth",
+  "has_exif": true
+}
+```
+
+**Pro Tip:** Use the returned `scale_low` and `scale_high` values when calling `/solve` for 3-5x faster solving!
 
 #### `POST /solve`
 
@@ -329,7 +373,9 @@ spec:
 ### Running Tests
 
 ```bash
-make test              # Run all tests
+make test-unit         # Fast unit tests (skips Docker)
+make test-integration  # Full integration tests (requires Docker)
+make test-all          # Run all tests (unit + integration)
 make test-coverage     # Generate coverage report
 make lint              # Run linter
 ```
