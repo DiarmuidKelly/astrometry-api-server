@@ -8,14 +8,14 @@ RUN apk add --no-cache git make
 WORKDIR /build
 
 # Copy go mod files
-COPY astrometry-api-server/go.mod ./
-COPY astrometry-api-server/go.sum* ./
+COPY go.mod ./
+COPY go.sum ./
 
 # Download dependencies
 RUN go mod download
 
 # Copy source code
-COPY astrometry-api-server/ .
+COPY . .
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \

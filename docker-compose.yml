@@ -1,8 +1,8 @@
 services:
   api:
     build:
-      context: ..
-      dockerfile: astrometry-api-server/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     container_name: astrometry-api-server
     ports:
       - "${PORT:-8080}:8080"
