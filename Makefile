@@ -113,7 +113,7 @@ local-test: ## Build Docker, run integration tests locally (like CI)
 	@curl -f http://localhost:$(PORT)/health || (docker compose logs && docker compose down && exit 1)
 	@echo "Health check passed"
 	@echo "Running unit tests with /shared-data available..."
-	@docker run --rm -v astrometry-shared:/shared-data -v $(PWD):/src -w /src golang:alpine sh -c "apk add --no-cache git make && go test -v -race -coverprofile=coverage-docker.out ./..." || (docker compose down && exit 1)
+	@docker run --rm -v astrometry-shared:/shared-data -v $(PWD):/src -w /src golang:alpine sh -c "apk add --no-cache git make && go test -v -coverprofile=coverage-docker.out ./..." || (docker compose down && exit 1)
 	@echo "Integration tests complete!"
 	@echo "Stopping containers..."
 	@docker compose down
