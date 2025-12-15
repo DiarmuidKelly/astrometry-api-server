@@ -5,19 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2025-12-16
+
+### Fixed
+
+- Docker image repository name lowercase requirement (ghcr.io)
+- Removed Windows binary builds (not compatible with Docker socket requirement)
+
 ## [0.1.2] - 2025-12-15
-
-### Fixed
-
-- Bug fixes and improvements
-
-## [0.1.1] - 2025-12-15
-
-### Fixed
-
-- Bug fixes and improvements
-
-## [0.1.1] - 2025-12-16
 
 ### Fixed
 
@@ -75,5 +70,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for multiple image formats (JPG, PNG, FITS)
 - JSON response format with solve results and WCS headers
 
-[0.1.1]: https://github.com/DiarmuidKelly/astrometry-api-server/releases/tag/v0.1.1
+[0.1.3]: https://github.com/DiarmuidKelly/astrometry-api-server/releases/tag/v0.1.3
+[0.1.2]: https://github.com/DiarmuidKelly/astrometry-api-server/releases/tag/v0.1.2
 [0.1.0]: https://github.com/DiarmuidKelly/astrometry-api-server/releases/tag/v0.1.0
