@@ -7,18 +7,18 @@ RUN apk add --no-cache git make
 # Set working directory
 WORKDIR /build
 
-# Copy the local Astrometry-Go-Client dependency first
-COPY Astrometry-Go-Client /Astrometry-Go-Client
+# Copy the local astrometry-go-client dependency first
+COPY astrometry-go-client /astrometry-go-client
 
 # Copy go mod files
-COPY Astrometry-API-Server/go.mod ./
-COPY Astrometry-API-Server/go.sum* ./
+COPY astrometry-api-server/go.mod ./
+COPY astrometry-api-server/go.sum* ./
 
 # Download dependencies
 RUN go mod download
 
 # Copy source code
-COPY Astrometry-API-Server/ .
+COPY astrometry-api-server/ .
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \

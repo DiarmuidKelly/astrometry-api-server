@@ -12,7 +12,7 @@ const docTemplate = `{
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
-            "url": "https://github.com/DiarmuidKelly/Astrometry-API-Server"
+            "url": "https://github.com/DiarmuidKelly/astrometry-api-server"
         },
         "license": {
             "name": "GPL-3.0",

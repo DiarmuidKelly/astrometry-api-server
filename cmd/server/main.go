@@ -6,7 +6,7 @@
 //	@termsOfService				http://swagger.io/terms/
 //
 //	@contact.name				API Support
-//	@contact.url				https://github.com/DiarmuidKelly/Astrometry-API-Server
+//	@contact.url				https://github.com/DiarmuidKelly/astrometry-api-server
 //
 //	@license.name				GPL-3.0
 //	@license.url				https://www.gnu.org/licenses/gpl-3.0.en.html
@@ -32,10 +32,10 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/DiarmuidKelly/Astrometry-API-Server/docs"
-	"github.com/DiarmuidKelly/Astrometry-API-Server/internal/handlers"
-	"github.com/DiarmuidKelly/Astrometry-API-Server/internal/middleware"
-	"github.com/DiarmuidKelly/Astrometry-Go-Client/pkg/solver"
+	_ "github.com/DiarmuidKelly/astrometry-api-server/docs"
+	"github.com/DiarmuidKelly/astrometry-api-server/internal/handlers"
+	"github.com/DiarmuidKelly/astrometry-api-server/internal/middleware"
+	"github.com/DiarmuidKelly/astrometry-go-client/pkg/solver"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 

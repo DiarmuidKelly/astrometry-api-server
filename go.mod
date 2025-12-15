@@ -1,9 +1,9 @@
-module github.com/DiarmuidKelly/Astrometry-API-Server
+module github.com/DiarmuidKelly/astrometry-api-server
 
 go 1.24.5
 
 require (
-	github.com/DiarmuidKelly/Astrometry-Go-Client v0.0.0
+	github.com/DiarmuidKelly/astrometry-go-client v0.0.0
 	github.com/swaggo/swag v1.16.6
 )
 
@@ -36,4 +36,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace github.com/DiarmuidKelly/Astrometry-Go-Client => ../Astrometry-Go-Client
+replace github.com/DiarmuidKelly/astrometry-go-client => ../astrometry-go-client

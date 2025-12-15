@@ -35,8 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Go linting with golangci-lint
   - Docker image building and publishing
   - Automatic releases with version bumping
-- Integration with Astrometry-Go-Client library
+- Integration with astrometry-go-client library
 - Support for multiple image formats (JPG, PNG, FITS)
 - JSON response format with solve results and WCS headers
 
-[0.1.0]: https://github.com/DiarmuidKelly/Astrometry-API-Server/releases/tag/v0.1.0
+[0.1.0]: https://github.com/DiarmuidKelly/astrometry-api-server/releases/tag/v0.1.0

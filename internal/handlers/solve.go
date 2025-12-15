@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/DiarmuidKelly/Astrometry-Go-Client/pkg/solver"
+	"github.com/DiarmuidKelly/astrometry-go-client/pkg/solver"
 )
 
 // SolveHandler handles plate-solving requests

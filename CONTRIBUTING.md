@@ -29,8 +29,8 @@ This project adheres to a code of conduct that promotes a welcoming and inclusiv
 
 ```bash
 # Fork and clone the repository
-git clone https://github.com/YOUR_USERNAME/Astrometry-API-Server.git
-cd Astrometry-API-Server
+git clone https://github.com/YOUR_USERNAME/astrometry-api-server.git
+cd astrometry-api-server
 
 # Download dependencies
 go mod download
@@ -45,6 +45,7 @@ make build
 ## Development Workflow
 
 1. **Create a feature branch**
+
    ```bash
    git checkout -b feat/my-feature
    # or
@@ -52,12 +53,14 @@ make build
    ```
 
 2. **Make your changes**
+
    - Write clean, idiomatic Go code
    - Follow existing code style and patterns
    - Add tests for new functionality
    - Update documentation as needed
 
 3. **Test your changes**
+
    ```bash
    # Run tests
    make test
@@ -70,6 +73,7 @@ make build
    ```
 
 4. **Commit your changes**
+
    ```bash
    git add .
    git commit -m "feat: add new feature"
@@ -95,6 +99,7 @@ make build
 ```
 
 **Examples:**
+
 - `[MAJOR] Redesign API endpoints with breaking changes`
 - `[MINOR] Add batch solving endpoint`
 - `[PATCH] Fix CORS header configuration`
@@ -107,6 +112,7 @@ make build
 ```
 
 **Types:**
+
 - `feat:` - New feature (no release)
 - `fix:` - Bug fix (no release)
 - `docs:` - Documentation updates
@@ -119,6 +125,7 @@ make build
 - `chore:` - Other changes (dependencies, etc.)
 
 **Examples:**
+
 - `docs: Update API examples in README`
 - `test: Add integration tests for health endpoint`
 - `refactor: Simplify error handling in solve handler`
@@ -145,23 +152,28 @@ Include in your PR description:
 
 ```markdown
 ## Summary
+
 Brief description of the change.
 
 ## Motivation
+
 Why is this change necessary? What problem does it solve?
 
 ## Changes
+
 - Change 1
 - Change 2
 - Change 3
 
 ## Testing
+
 - [ ] Unit tests pass
 - [ ] Integration tests pass
 - [ ] Manual testing completed
 - [ ] Linter passes
 
 ## Related Issues
+
 Fixes #123
 ```
 
@@ -266,11 +278,13 @@ The project uses **automated releases** via GitHub Actions. The release process 
 ### How Releases Work
 
 1. **PR Title** determines the version bump:
+
    - `[MAJOR]` → Major version (e.g., 1.0.0 → 2.0.0)
    - `[MINOR]` → Minor version (e.g., 1.0.0 → 1.1.0)
    - `[PATCH]` → Patch version (e.g., 1.0.0 → 1.0.1)
 
 2. **On PR merge**, the workflow:
+
    - Runs `scripts/auto-release.sh` to bump version
    - Updates `VERSION` and `CHANGELOG.md`
    - Creates a git commit and tag
@@ -321,7 +335,7 @@ internal/
 
 If you have questions or need help:
 
-1. Check existing [Issues](https://github.com/DiarmuidKelly/Astrometry-API-Server/issues)
+1. Check existing [Issues](https://github.com/DiarmuidKelly/astrometry-api-server/issues)
 2. Create a new issue with the `question` label
 3. Reach out to maintainers
 

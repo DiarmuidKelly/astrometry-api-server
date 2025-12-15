@@ -31,7 +31,7 @@ linters-settings:
     simplify: true
 
   goimports:
-    local-prefixes: github.com/DiarmuidKelly/Astrometry-API-Server
+    local-prefixes: github.com/DiarmuidKelly/astrometry-api-server
 
   revive:
     rules:

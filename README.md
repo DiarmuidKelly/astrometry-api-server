@@ -1,11 +1,11 @@
 # Astrometry API Server
 
-![Version](https://img.shields.io/github/v/release/DiarmuidKelly/Astrometry-API-Server?label=version)
+![Version](https://img.shields.io/github/v/release/DiarmuidKelly/astrometry-api-server?label=version)
 ![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)
-![Go Version](https://img.shields.io/github/go-mod/go-version/DiarmuidKelly/Astrometry-API-Server)
-[![Go Report Card](https://goreportcard.com/badge/github.com/DiarmuidKelly/Astrometry-API-Server)](https://goreportcard.com/report/github.com/DiarmuidKelly/Astrometry-API-Server)
+![Go Version](https://img.shields.io/github/go-mod/go-version/DiarmuidKelly/astrometry-api-server)
+[![Go Report Card](https://goreportcard.com/badge/github.com/DiarmuidKelly/astrometry-api-server)](https://goreportcard.com/report/github.com/DiarmuidKelly/astrometry-api-server)
 
-A production-ready HTTP API server for astrometric plate-solving. Built on top of the [Astrometry-Go-Client](https://github.com/DiarmuidKelly/Astrometry-Go-Client) library, this server provides a RESTful interface for solving astronomical images.
+A production-ready HTTP API server for astrometric plate-solving. Built on top of the [astrometry-go-client](https://github.com/DiarmuidKelly/astrometry-go-client) library, this server provides a RESTful interface for solving astronomical images.
 
 ## Features
 
@@ -43,8 +43,8 @@ curl http://localhost:8080/health
 
 ```bash
 # Clone the repository
-git clone https://github.com/DiarmuidKelly/Astrometry-API-Server.git
-cd Astrometry-API-Server
+git clone https://github.com/DiarmuidKelly/astrometry-api-server.git
+cd astrometry-api-server
 
 # Create .env file
 cp .env.example .env
@@ -63,8 +63,8 @@ docker-compose logs -f api
 # Prerequisites: Go 1.21+, Docker
 
 # Clone the repository
-git clone https://github.com/DiarmuidKelly/Astrometry-API-Server.git
-cd Astrometry-API-Server
+git clone https://github.com/DiarmuidKelly/astrometry-api-server.git
+cd astrometry-api-server
 
 # Download dependencies
 go mod download
@@ -86,6 +86,7 @@ export ASTROMETRY_INDEX_PATH=/path/to/astrometry-data
 Health check endpoint.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -99,26 +100,28 @@ Health check endpoint.
 Solve an astronomical image.
 
 **Request:**
+
 - Method: `POST`
 - Content-Type: `multipart/form-data`
 - Max upload size: 50 MB
 
 **Form Fields:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `image` | file | Yes | Image file (jpg, png, fits) |
-| `scale_low` | float | No | Lower bound of image scale |
-| `scale_high` | float | No | Upper bound of image scale |
-| `scale_units` | string | No | Scale units: "degwidth", "arcminwidth", "arcsecperpix" (default: "arcminwidth") |
-| `downsample_factor` | int | No | Downsample factor (default: 2) |
-| `depth_low` | int | No | Min quads to try (default: 10) |
-| `depth_high` | int | No | Max quads to try (default: 20) |
-| `ra` | float | No | RA hint in degrees |
-| `dec` | float | No | Dec hint in degrees |
-| `radius` | float | No | Search radius in degrees |
+| Field               | Type   | Required | Description                                                                     |
+| ------------------- | ------ | -------- | ------------------------------------------------------------------------------- |
+| `image`             | file   | Yes      | Image file (jpg, png, fits)                                                     |
+| `scale_low`         | float  | No       | Lower bound of image scale                                                      |
+| `scale_high`        | float  | No       | Upper bound of image scale                                                      |
+| `scale_units`       | string | No       | Scale units: "degwidth", "arcminwidth", "arcsecperpix" (default: "arcminwidth") |
+| `downsample_factor` | int    | No       | Downsample factor (default: 2)                                                  |
+| `depth_low`         | int    | No       | Min quads to try (default: 10)                                                  |
+| `depth_high`        | int    | No       | Max quads to try (default: 20)                                                  |
+| `ra`                | float  | No       | RA hint in degrees                                                              |
+| `dec`               | float  | No       | Dec hint in degrees                                                             |
+| `radius`            | float  | No       | Search radius in degrees                                                        |
 
 **Response:**
+
 ```json
 {
   "solved": true,
@@ -138,6 +141,7 @@ Solve an astronomical image.
 ```
 
 If solving fails:
+
 ```json
 {
   "solved": false,
@@ -196,13 +200,13 @@ else:
 ```javascript
 async function solveImage(imageFile) {
   const formData = new FormData();
-  formData.append('image', imageFile);
-  formData.append('scale_low', '1');
-  formData.append('scale_high', '5');
+  formData.append("image", imageFile);
+  formData.append("scale_low", "1");
+  formData.append("scale_high", "5");
 
-  const response = await fetch('http://localhost:8080/solve', {
-    method: 'POST',
-    body: formData
+  const response = await fetch("http://localhost:8080/solve", {
+    method: "POST",
+    body: formData,
   });
 
   const result = await response.json();
@@ -220,10 +224,10 @@ async function solveImage(imageFile) {
 
 The server is configured via environment variables:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
+| Variable                | Default         | Description                    |
+| ----------------------- | --------------- | ------------------------------ |
 | `ASTROMETRY_INDEX_PATH` | `/data/indexes` | Path to astrometry index files |
-| `PORT` | `8080` | HTTP server port |
+| `PORT`                  | `8080`          | HTTP server port               |
 
 ## Prerequisites
 
@@ -237,9 +241,10 @@ The API server needs access to the Docker socket to spawn astrometry containers.
 
 ### Astrometry Index Files
 
-Download appropriate index files for your field of view. See the [Astrometry-Go-Client Index Files Guide](https://github.com/DiarmuidKelly/Astrometry-Go-Client#index-files-guide) for details.
+Download appropriate index files for your field of view. See the [astrometry-go-client Index Files Guide](https://github.com/DiarmuidKelly/astrometry-go-client#index-files-guide) for details.
 
 **Quick solver setup (50mm-300mm focal lengths):**
+
 ```bash
 mkdir -p astrometry-data && cd astrometry-data
 wget http://data.astrometry.net/4100/index-4110.fits  # 3.0° - 4.2°
@@ -254,7 +259,7 @@ wget http://data.astrometry.net/4100/index-4113.fits  # 1.1° - 1.6°
 
 ```yaml
 # docker-compose.prod.yml
-version: '3.8'
+version: "3.8"
 
 services:
   api:
@@ -270,7 +275,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'
+          cpus: "2.0"
           memory: 2G
 ```
 
@@ -288,19 +293,19 @@ spec:
   template:
     spec:
       containers:
-      - name: api
-        image: ghcr.io/diarmuidkelly/astrometry-api-server:latest
-        ports:
-        - containerPort: 8080
-        env:
-        - name: ASTROMETRY_INDEX_PATH
-          value: /data/indexes
-        volumeMounts:
-        - name: docker-socket
-          mountPath: /var/run/docker.sock
-        - name: indexes
-          mountPath: /data/indexes
-          readOnly: true
+        - name: api
+          image: ghcr.io/diarmuidkelly/astrometry-api-server:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASTROMETRY_INDEX_PATH
+              value: /data/indexes
+          volumeMounts:
+            - name: docker-socket
+              mountPath: /var/run/docker.sock
+            - name: indexes
+              mountPath: /data/indexes
+              readOnly: true
 ```
 
 ## Development
@@ -350,6 +355,7 @@ make all               # Run all checks and build
 Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for workflow details.
 
 **Quick Start:**
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feat/my-feature`)
 3. Make your changes with conventional commits
@@ -363,12 +369,12 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 - [Changelog](CHANGELOG.md)
 - [Contributing Guide](CONTRIBUTING.md)
-- [Issues](https://github.com/DiarmuidKelly/Astrometry-API-Server/issues)
-- [Astrometry-Go-Client Library](https://github.com/DiarmuidKelly/Astrometry-Go-Client)
+- [Issues](https://github.com/DiarmuidKelly/astrometry-api-server/issues)
+- [astrometry-go-client Library](https://github.com/DiarmuidKelly/astrometry-go-client)
 - [Astrometry.net](http://astrometry.net/)
 
 ## Acknowledgments
 
 - [Astrometry.net](http://astrometry.net/) project for the plate-solving engine
 - [dm90/astrometry](https://hub.docker.com/r/dm90/astrometry) for the containerized version
-- [Astrometry-Go-Client](https://github.com/DiarmuidKelly/Astrometry-Go-Client) for the Go library
+- [astrometry-go-client](https://github.com/DiarmuidKelly/astrometry-go-client) for the Go library

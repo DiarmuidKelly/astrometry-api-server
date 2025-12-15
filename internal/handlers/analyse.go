@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/DiarmuidKelly/Astrometry-Go-Client/pkg/solver/fov"
+	"github.com/DiarmuidKelly/astrometry-go-client/pkg/solver/fov"
 )
 
 // AnalyseHandler handles image analysis requests (EXIF extraction + FOV calculation)

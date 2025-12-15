@@ -21,6 +21,7 @@ Base URL: `http://localhost:8080`
 The Astrometry API Server provides a REST API for plate-solving astronomical images using Astrometry.net. Upload an image and receive celestial coordinates, field of view, and World Coordinate System (WCS) information.
 
 **Features:**
+
 - Plate-solving for astronomical images
 - Support for JPEG, PNG, and FITS formats
 - Automatic WCS header extraction
@@ -43,9 +44,9 @@ Analyzes an image to extract camera details from EXIF and calculate field of vie
 
 **Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `image` | file | **Yes** | Image file to analyze (jpg, jpeg, png) |
+| Parameter | Type | Required | Description                            |
+| --------- | ---- | -------- | -------------------------------------- |
+| `image`   | file | **Yes**  | Image file to analyze (jpg, jpeg, png) |
 
 **Response:**
 
@@ -85,12 +86,12 @@ Analyzes an image to extract camera details from EXIF and calculate field of vie
 
 **Status Codes:**
 
-| Code | Description |
-|------|-------------|
-| 200 | Request processed (check `success` field) |
-| 400 | Bad request (invalid file or missing image field) |
-| 405 | Method not allowed (use POST) |
-| 413 | File too large (max 50MB) |
+| Code | Description                                       |
+| ---- | ------------------------------------------------- |
+| 200  | Request processed (check `success` field)         |
+| 400  | Bad request (invalid file or missing image field) |
+| 405  | Method not allowed (use POST)                     |
+| 413  | File too large (max 50MB)                         |
 
 ---
 
@@ -106,19 +107,19 @@ Performs plate-solving on an uploaded astronomical image.
 
 **Parameters:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `image` | file | **Yes** | - | Image file to solve (jpg, jpeg, png, fits, fit) |
-| `scale_low` | float | No | - | Lower bound of image scale |
-| `scale_high` | float | No | - | Upper bound of image scale |
-| `scale_units` | string | No | `arcminwidth` | Units for scale bounds (`degwidth`, `arcminwidth`, `arcsecperpix`) |
-| `downsample_factor` | int | No | `2` | Downsample factor (higher = faster but less accurate) |
-| `depth_low` | int | No | `10` | Minimum number of quads to try |
-| `depth_high` | int | No | `20` | Maximum number of quads to try |
-| `ra` | float | No | - | Right Ascension hint in degrees (J2000) |
-| `dec` | float | No | - | Declination hint in degrees (J2000) |
-| `radius` | float | No | - | Search radius in degrees (requires ra/dec) |
-| `keep_temp_files` | boolean | No | `false` | Preserve temporary files for debugging |
+| Parameter           | Type    | Required | Default       | Description                                                        |
+| ------------------- | ------- | -------- | ------------- | ------------------------------------------------------------------ |
+| `image`             | file    | **Yes**  | -             | Image file to solve (jpg, jpeg, png, fits, fit)                    |
+| `scale_low`         | float   | No       | -             | Lower bound of image scale                                         |
+| `scale_high`        | float   | No       | -             | Upper bound of image scale                                         |
+| `scale_units`       | string  | No       | `arcminwidth` | Units for scale bounds (`degwidth`, `arcminwidth`, `arcsecperpix`) |
+| `downsample_factor` | int     | No       | `2`           | Downsample factor (higher = faster but less accurate)              |
+| `depth_low`         | int     | No       | `10`          | Minimum number of quads to try                                     |
+| `depth_high`        | int     | No       | `20`          | Maximum number of quads to try                                     |
+| `ra`                | float   | No       | -             | Right Ascension hint in degrees (J2000)                            |
+| `dec`               | float   | No       | -             | Declination hint in degrees (J2000)                                |
+| `radius`            | float   | No       | -             | Search radius in degrees (requires ra/dec)                         |
+| `keep_temp_files`   | boolean | No       | `false`       | Preserve temporary files for debugging                             |
 
 **Response:**
 
@@ -162,13 +163,13 @@ Performs plate-solving on an uploaded astronomical image.
 
 **Status Codes:**
 
-| Code | Description |
-|------|-------------|
-| 200 | Request processed (check `solved` field for success) |
-| 400 | Bad request (invalid parameters or file) |
-| 405 | Method not allowed (use POST) |
-| 413 | File too large (max 50MB) |
-| 500 | Internal server error |
+| Code | Description                                          |
+| ---- | ---------------------------------------------------- |
+| 200  | Request processed (check `solved` field for success) |
+| 400  | Bad request (invalid parameters or file)             |
+| 405  | Method not allowed (use POST)                        |
+| 413  | File too large (max 50MB)                            |
+| 500  | Internal server error                                |
 
 ---
 
@@ -192,10 +193,10 @@ Health check endpoint.
 
 **Status Codes:**
 
-| Code | Description |
-|------|-------------|
-| 200 | Service is healthy |
-| 405 | Method not allowed (use GET) |
+| Code | Description                  |
+| ---- | ---------------------------- |
+| 200  | Service is healthy           |
+| 405  | Method not allowed (use GET) |
 
 ---
 
@@ -203,26 +204,26 @@ Health check endpoint.
 
 ### SolveResponse
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `solved` | boolean | Whether the image was successfully plate-solved |
-| `ra` | float | Right Ascension of image center in degrees (J2000) |
-| `dec` | float | Declination of image center in degrees (J2000) |
-| `pixel_scale` | float | Image scale in arcseconds per pixel |
-| `rotation` | float | Field rotation in degrees |
-| `field_width` | float | Field of view width in degrees |
-| `field_height` | float | Field of view height in degrees |
-| `wcs_header` | object | Raw WCS header fields from FITS file |
-| `solve_time` | float | Duration of solve operation in seconds |
-| `error` | string | Error message (only present if solve failed) |
+| Field          | Type    | Description                                        |
+| -------------- | ------- | -------------------------------------------------- |
+| `solved`       | boolean | Whether the image was successfully plate-solved    |
+| `ra`           | float   | Right Ascension of image center in degrees (J2000) |
+| `dec`          | float   | Declination of image center in degrees (J2000)     |
+| `pixel_scale`  | float   | Image scale in arcseconds per pixel                |
+| `rotation`     | float   | Field rotation in degrees                          |
+| `field_width`  | float   | Field of view width in degrees                     |
+| `field_height` | float   | Field of view height in degrees                    |
+| `wcs_header`   | object  | Raw WCS header fields from FITS file               |
+| `solve_time`   | float   | Duration of solve operation in seconds             |
+| `error`        | string  | Error message (only present if solve failed)       |
 
 ### HealthResponse
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `status` | string | Health status ("healthy") |
-| `uptime_seconds` | float | Server uptime in seconds |
-| `version` | string | API version |
+| Field            | Type   | Description               |
+| ---------------- | ------ | ------------------------- |
+| `status`         | string | Health status ("healthy") |
+| `uptime_seconds` | float  | Server uptime in seconds  |
+| `version`        | string | API version               |
 
 ---
 
@@ -239,14 +240,14 @@ All errors are returned with appropriate HTTP status codes and a JSON response:
 
 **Common Errors:**
 
-| Error | Status | Cause |
-|-------|--------|-------|
-| `Missing or invalid 'image' field` | 400 | No image uploaded or wrong field name |
-| `Invalid file type` | 400 | Unsupported file format |
-| `Failed to parse form` | 400 | Malformed multipart request |
-| `Failed to save file` | 500 | Server I/O error |
-| `no solution found` | 200 | Image could not be solved (not an error) |
-| `solve operation timed out` | 200 | Solve took longer than 5 minutes |
+| Error                              | Status | Cause                                    |
+| ---------------------------------- | ------ | ---------------------------------------- |
+| `Missing or invalid 'image' field` | 400    | No image uploaded or wrong field name    |
+| `Invalid file type`                | 400    | Unsupported file format                  |
+| `Failed to parse form`             | 400    | Malformed multipart request              |
+| `Failed to save file`              | 500    | Server I/O error                         |
+| `no solution found`                | 200    | Image could not be solved (not an error) |
+| `solve operation timed out`        | 200    | Solve took longer than 5 minutes         |
 
 ---
 
@@ -263,6 +264,7 @@ curl -X POST -F "image=@photo.jpg" http://localhost:8080/analyse | jq
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -341,7 +343,7 @@ package main
 import (
     "fmt"
     "log"
-    "github.com/DiarmuidKelly/Astrometry-Go-Client/pkg/solver/fov"
+    "github.com/DiarmuidKelly/astrometry-go-client/pkg/solver/fov"
 )
 
 func main() {
@@ -375,6 +377,7 @@ curl http://localhost:8080/health
 ```
 
 Response:
+
 ```json
 {
   "status": "healthy",
@@ -420,7 +423,7 @@ package main
 
 import (
     "fmt"
-    "github.com/DiarmuidKelly/Astrometry-Go-Client/pkg/solver/fov"
+    "github.com/DiarmuidKelly/astrometry-go-client/pkg/solver/fov"
 )
 
 func main() {
@@ -468,7 +471,8 @@ Solve operations timeout after **5 minutes**. If your images consistently timeou
 ## Support
 
 For issues or questions:
-- GitHub: https://github.com/DiarmuidKelly/Astrometry-API-Server
+
+- GitHub: https://github.com/DiarmuidKelly/astrometry-api-server
 - Documentation: See README.md
 
 ---
