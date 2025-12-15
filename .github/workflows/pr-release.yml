@@ -1,0 +1,132 @@
+name: Auto Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine version bump
+        id: version
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $PR_TITLE"
+
+          # Check for skip-release or conventional commits
+          if [[ "$PR_TITLE" =~ ^\[skip-release\] ]] || \
+             [[ "$PR_TITLE" =~ ^(docs|style|test|chore|ci|build|refactor): ]]; then
+            echo "Skipping release"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Determine version bump type
+          if [[ "$PR_TITLE" =~ ^\[MAJOR\] ]] || [[ "$PR_TITLE" =~ ^feat.*!: ]]; then
+            BUMP_TYPE="major"
+          elif [[ "$PR_TITLE" =~ ^\[MINOR\] ]] || [[ "$PR_TITLE" =~ ^feat: ]]; then
+            BUMP_TYPE="minor"
+          elif [[ "$PR_TITLE" =~ ^\[PATCH\] ]] || [[ "$PR_TITLE" =~ ^fix: ]]; then
+            BUMP_TYPE="patch"
+          else
+            echo "No version bump indicator found, skipping release"
+            echo "skip=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "skip=false" >> $GITHUB_OUTPUT
+
+      - name: Run auto-release script
+        if: steps.version.outputs.skip != 'true'
+        run: |
+          chmod +x scripts/auto-release.sh
+          ./scripts/auto-release.sh ${{ steps.version.outputs.bump_type }}
+
+      - name: Read new version
+        if: steps.version.outputs.skip != 'true'
+        id: new_version
+        run: |
+          VERSION=$(cat VERSION)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $VERSION"
+
+      - name: Push changes
+        if: steps.version.outputs.skip != 'true'
+        run: |
+          git push origin main
+          git push origin v${{ steps.new_version.outputs.version }}
+
+      - name: Set up Go
+        if: steps.version.outputs.skip != 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build multi-platform binaries
+        if: steps.version.outputs.skip != 'true'
+        run: |
+          mkdir -p dist
+
+          # Linux amd64
+          GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o dist/astrometry-api-server-linux-amd64 ./cmd/server
+          tar -czf dist/astrometry-api-server-linux-amd64.tar.gz -C dist astrometry-api-server-linux-amd64
+
+          # Linux arm64
+          GOOS=linux GOARCH=arm64 go build -ldflags="-w -s" -o dist/astrometry-api-server-linux-arm64 ./cmd/server
+          tar -czf dist/astrometry-api-server-linux-arm64.tar.gz -C dist astrometry-api-server-linux-arm64
+
+          # macOS amd64
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-w -s" -o dist/astrometry-api-server-darwin-amd64 ./cmd/server
+          tar -czf dist/astrometry-api-server-darwin-amd64.tar.gz -C dist astrometry-api-server-darwin-amd64
+
+          # macOS arm64
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-w -s" -o dist/astrometry-api-server-darwin-arm64 ./cmd/server
+          tar -czf dist/astrometry-api-server-darwin-arm64.tar.gz -C dist astrometry-api-server-darwin-arm64
+
+          # Windows amd64
+          GOOS=windows GOARCH=amd64 go build -ldflags="-w -s" -o dist/astrometry-api-server-windows-amd64.exe ./cmd/server
+          zip -j dist/astrometry-api-server-windows-amd64.zip dist/astrometry-api-server-windows-amd64.exe
+
+      - name: Extract changelog for version
+        if: steps.version.outputs.skip != 'true'
+        id: changelog
+        run: |
+          VERSION="${{ steps.new_version.outputs.version }}"
+          # Extract the changelog section for this version
+          CHANGELOG=$(sed -n "/## \[${VERSION}\]/,/## \[/p" CHANGELOG.md | sed '$d' | tail -n +2)
+          # Use heredoc to preserve newlines
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.skip != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.new_version.outputs.version }}
+          name: Release v${{ steps.new_version.outputs.version }}
+          body: ${{ steps.changelog.outputs.content }}
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

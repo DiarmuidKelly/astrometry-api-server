@@ -1,0 +1,23 @@
+# CODEOWNERS file for Astrometry API Server
+# These owners will be automatically requested for review when someone opens a pull request.
+
+# Default owner for everything in the repo
+* @DiarmuidKelly
+
+# Workflows and CI/CD
+/.github/ @DiarmuidKelly
+
+# Documentation
+*.md @DiarmuidKelly
+/docs/ @DiarmuidKelly
+
+# Core server code
+/cmd/server/ @DiarmuidKelly
+/internal/ @DiarmuidKelly
+
+# Docker configuration
+Dockerfile @DiarmuidKelly
+docker-compose.yml @DiarmuidKelly
+
+# Release scripts
+/scripts/ @DiarmuidKelly
