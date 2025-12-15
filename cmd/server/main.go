@@ -35,7 +35,7 @@ import (
 	_ "github.com/DiarmuidKelly/astrometry-api-server/docs"
 	"github.com/DiarmuidKelly/astrometry-api-server/internal/handlers"
 	"github.com/DiarmuidKelly/astrometry-api-server/internal/middleware"
-	"github.com/DiarmuidKelly/astrometry-go-client/pkg/solver"
+	client "github.com/DiarmuidKelly/astrometry-go-client"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -47,21 +47,23 @@ func main() {
 	maxUploadSize := int64(50 * 1024 * 1024) // 50MB default
 
 	// Create astrometry client with docker exec mode
-	config := &solver.ClientConfig{
+	// Note: Docker socket access required for containerized deployment
+	// See SECURITY.md for security considerations
+	config := &client.ClientConfig{
 		IndexPath:     indexPath,
 		Timeout:       5 * time.Minute,
-		TempDir:       "/shared-data", // Shared volume path
-		UseDockerExec: true,           // Use docker exec instead of docker run
-		ContainerName: containerName,  // Target container name
+		TempDir:       "/shared-data",
+		UseDockerExec: true,
+		ContainerName: containerName,
 	}
 
-	client, err := solver.NewClient(config)
+	astrometryClient, err := client.NewClient(config)
 	if err != nil {
 		log.Fatalf("Failed to create astrometry client: %v", err)
 	}
 
 	// Create handlers
-	solveHandler := handlers.NewSolveHandler(client, maxUploadSize)
+	solveHandler := handlers.NewSolveHandler(astrometryClient, maxUploadSize)
 	analyseHandler := handlers.NewAnalyseHandler(maxUploadSize)
 	healthHandler := handlers.NewHealthHandler()
 

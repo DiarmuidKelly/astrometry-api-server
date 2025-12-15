@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/DiarmuidKelly/astrometry-go-client/pkg/solver/fov"
+	"github.com/DiarmuidKelly/astrometry-go-client/fov"
 )
 
 // AnalyseHandler handles image analysis requests (EXIF extraction + FOV calculation)
@@ -94,8 +94,8 @@ func (h *AnalyseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save to temporary file
-	tempDir := os.TempDir()
+	// Save to temporary file in shared directory (must match client's TempDir config)
+	tempDir := "/shared-data"
 	tempFile := filepath.Join(tempDir, fmt.Sprintf("analyse_%d%s", os.Getpid(), ext))
 	defer os.Remove(tempFile)
 

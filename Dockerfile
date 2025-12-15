@@ -36,7 +36,8 @@ RUN apk add --no-cache \
     && rm -rf /var/cache/apk/*
 
 # Create non-root user and docker group
-RUN addgroup -g 984 docker && \
+# Use GID 983 to match host docker socket permissions
+RUN addgroup -g 983 docker && \
     addgroup -g 1000 astrometry && \
     adduser -D -u 1000 -G astrometry astrometry && \
     adduser astrometry docker

@@ -5,7 +5,23 @@
 ![Go Version](https://img.shields.io/github/go-mod/go-version/DiarmuidKelly/astrometry-api-server)
 [![Go Report Card](https://goreportcard.com/badge/github.com/DiarmuidKelly/astrometry-api-server)](https://goreportcard.com/report/github.com/DiarmuidKelly/astrometry-api-server)
 
-A production-ready HTTP API server for astrometric plate-solving. Built on top of the [astrometry-go-client](https://github.com/DiarmuidKelly/astrometry-go-client) library, this server provides a RESTful interface for solving astronomical images.
+A HTTP API server for astrometric plate-solving. Built on top of the [astrometry-go-client](https://github.com/DiarmuidKelly/astrometry-go-client) library, this server provides a RESTful interface for solving astronomical images.
+
+## ⚠️ SECURITY WARNING
+
+**This project is currently designed for LOCAL/DEVELOPMENT use only.**
+
+The containerized deployment requires mounting the Docker socket (`/var/run/docker.sock`), which grants **root-equivalent access to the host system**. This creates a significant security risk if exposed to untrusted networks or the public internet.
+
+**Current Status:**
+
+- ✅ Safe for local development and trusted internal networks
+- ✅ Safe for controlled laboratory/observatory environments
+- ❌ **NOT SAFE** for public internet deployment without additional security layers
+- ❌ **NOT SAFE** for multi-tenant or shared hosting environments
+
+**For Production Deployment:**
+See [SECURITY.md](SECURITY.md) for detailed security considerations and recommended production architectures. We are actively working on a secure production deployment model - see [Issue #13](https://github.com/DiarmuidKelly/astrometry-go-client/issues/13) for progress.
 
 ## Features
 

@@ -11,19 +11,19 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/DiarmuidKelly/astrometry-go-client/pkg/solver"
+	client "github.com/DiarmuidKelly/astrometry-go-client"
 )
 
 // SolveHandler handles plate-solving requests
 type SolveHandler struct {
-	client        *solver.Client
+	client        *client.Client
 	maxUploadSize int64
 }
 
 // NewSolveHandler creates a new solve handler
-func NewSolveHandler(client *solver.Client, maxUploadSize int64) *SolveHandler {
+func NewSolveHandler(c *client.Client, maxUploadSize int64) *SolveHandler {
 	return &SolveHandler{
-		client:        client,
+		client:        c,
 		maxUploadSize: maxUploadSize,
 	}
 }
@@ -52,6 +52,7 @@ type SolveResponse struct {
 	FieldHeight float64           `json:"field_height,omitempty"`
 	WCSHeader   map[string]string `json:"wcs_header,omitempty"`
 	SolveTime   float64           `json:"solve_time,omitempty"`
+	RawOutput   string            `json:"raw_output,omitempty"`
 	Error       string            `json:"error,omitempty"`
 }
 
@@ -110,8 +111,8 @@ func (h *SolveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save to temporary file
-	tempDir := os.TempDir()
+	// Save to temporary file in shared directory (must match client's TempDir config)
+	tempDir := "/shared-data"
 	tempFile := filepath.Join(tempDir, fmt.Sprintf("astro_%d%s", os.Getpid(), ext))
 	defer os.Remove(tempFile)
 
@@ -143,6 +144,8 @@ func (h *SolveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		response.Error = err.Error()
 	} else {
 		response.Solved = result.Solved
+		response.SolveTime = result.SolveTime
+		response.RawOutput = result.RawOutput
 		if result.Solved {
 			response.RA = result.RA
 			response.Dec = result.Dec
@@ -151,11 +154,10 @@ func (h *SolveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			response.FieldWidth = result.FieldWidth
 			response.FieldHeight = result.FieldHeight
 			response.WCSHeader = result.WCSHeader
-			response.SolveTime = result.SolveTime
 			log.Printf("Solved: RA=%.6f, Dec=%.6f, PixelScale=%.2f, Time=%.2fs",
 				result.RA, result.Dec, result.PixelScale, result.SolveTime)
 		} else {
-			log.Printf("No solution found")
+			log.Printf("No solution found (Time=%.2fs)", result.SolveTime)
 		}
 	}
 
@@ -166,8 +168,8 @@ func (h *SolveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *SolveHandler) parseSolveOptions(r *http.Request) *solver.SolveOptions {
-	opts := solver.DefaultSolveOptions()
+func (h *SolveHandler) parseSolveOptions(r *http.Request) *client.SolveOptions {
+	opts := client.DefaultSolveOptions()
 
 	// Parse optional parameters
 	if val := r.FormValue("scale_low"); val != "" {

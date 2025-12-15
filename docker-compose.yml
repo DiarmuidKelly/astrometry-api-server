@@ -11,11 +11,13 @@ services:
       - PORT=8080
       - ASTROMETRY_CONTAINER_NAME=astrometry-solver
     volumes:
-      # Mount Docker socket for docker exec commands
+      # Docker socket (REQUIRED for containerized deployment)
+      # SECURITY WARNING: Grants root-equivalent access to host
+      # See SECURITY.md for details and production alternatives
       - /var/run/docker.sock:/var/run/docker.sock
 
       # Mount astrometry index files (read-only)
-      - ${ASTROMETRY_INDEX_PATH:-/home/diarmuid/code/astrometry-go-client/astrometry-data}:/data/indexes:ro
+      - ${ASTROMETRY_INDEX_PATH:-/home/diarmuid/personal-code/astrometry-go-client/astrometry-data}:/data/indexes:ro
 
       # Shared volume for file exchange with astrometry container
       - astrometry-shared:/shared-data
@@ -55,7 +57,7 @@ services:
     container_name: astrometry-solver
     volumes:
       # Mount astrometry index files (read-only)
-      - ${ASTROMETRY_INDEX_PATH:-/home/diarmuid/code/astrometry-go-client/astrometry-data}:/usr/local/astrometry/data:ro
+      - ${ASTROMETRY_INDEX_PATH:-/home/diarmuid/personal-code/astrometry-go-client/astrometry-data}:/usr/local/astrometry/data:ro
 
       # Shared volume for file exchange with API server
       - astrometry-shared:/shared-data
@@ -77,12 +79,13 @@ services:
 
 volumes:
   astrometry-shared:
+
 # Usage:
 # 1. Set environment variables or create .env file:
 #    ASTROMETRY_INDEX_PATH=/path/to/your/indexes
 #    PORT=8080
 #
-# 2. Build and start both services:
+# 2. Build and start services:
 #    docker compose up -d --build
 #
 # 3. Test the health endpoint:
@@ -99,5 +102,13 @@ volumes:
 # 6. Stop the servers:
 #    docker compose down
 #
-# Architecture: API server calls docker exec on the astrometry container.
-# Files are exchanged via the shared Docker volume.
+# Architecture:
+# - API server uses docker exec to run solve-field in long-running astrometry container
+# - Files exchanged via shared Docker volume
+# - Docker socket required for containerized deployment
+#
+# SECURITY NOTE:
+# - This setup requires docker socket access (root-equivalent access to host)
+# - Suitable for local development and trusted internal networks
+# - NOT suitable for public internet deployment without additional security layers
+# - See SECURITY.md for production deployment recommendations
