@@ -47,7 +47,7 @@ docker pull ghcr.io/diarmuidkelly/astrometry-api-server:latest
 docker run -d \
   -p 8080:8080 \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /path/to/astrometry-data:/data/indexes:ro \
+  -v ./astrometry-data:/data/indexes:ro \
   -e ASTROMETRY_INDEX_PATH=/data/indexes \
   ghcr.io/diarmuidkelly/astrometry-api-server:latest
 
@@ -127,8 +127,8 @@ Analyze image EXIF data and calculate field of view. This is a fast operation (<
 
 **Form Fields:**
 
-| Field   | Type | Required | Description                   |
-| ------- | ---- | -------- | ----------------------------- |
+| Field   | Type | Required | Description                     |
+| ------- | ---- | -------- | ------------------------------- |
 | `image` | file | Yes      | Image file (JPG, PNG with EXIF) |
 
 **Response:**
