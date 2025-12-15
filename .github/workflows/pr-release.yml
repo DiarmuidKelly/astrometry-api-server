@@ -102,10 +102,6 @@ jobs:
           GOOS=darwin GOARCH=arm64 go build -ldflags="-w -s" -o dist/astrometry-api-server-darwin-arm64 ./cmd/server
           tar -czf dist/astrometry-api-server-darwin-arm64.tar.gz -C dist astrometry-api-server-darwin-arm64
 
-          # Windows amd64
-          GOOS=windows GOARCH=amd64 go build -ldflags="-w -s" -o dist/astrometry-api-server-windows-amd64.exe ./cmd/server
-          zip -j dist/astrometry-api-server-windows-amd64.zip dist/astrometry-api-server-windows-amd64.exe
-
       - name: Extract changelog for version
         if: steps.version.outputs.skip != 'true'
         id: changelog

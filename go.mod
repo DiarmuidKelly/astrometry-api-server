@@ -3,7 +3,7 @@ module github.com/DiarmuidKelly/astrometry-api-server
 go 1.24.5
 
 require (
-	github.com/DiarmuidKelly/astrometry-go-client v1.3.2
+	github.com/DiarmuidKelly/astrometry-go-client v1.3.3
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.6
 )

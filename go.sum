@@ -1,5 +1,5 @@
-github.com/DiarmuidKelly/astrometry-go-client v1.3.2 h1:x36o/cuEvv1hNV/SjNgmapnllbxYFIlWXhcORL0alSk=
-github.com/DiarmuidKelly/astrometry-go-client v1.3.2/go.mod h1:XDgyukZyJks3zub+ENnLu9ln36OwlqqME0zRi5DCvHY=
+github.com/DiarmuidKelly/astrometry-go-client v1.3.3 h1:gte3Z0mGsCHBcw0OVJ8g/EGKMwOXXVZ2HnzS35dSK1s=
+github.com/DiarmuidKelly/astrometry-go-client v1.3.3/go.mod h1:XDgyukZyJks3zub+ENnLu9ln36OwlqqME0zRi5DCvHY=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
