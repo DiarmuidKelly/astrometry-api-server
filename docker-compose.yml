@@ -7,7 +7,6 @@ services:
     ports:
       - "${PORT:-8080}:8080"
     environment:
-      - ASTROMETRY_INDEX_PATH=/data/indexes
       - PORT=8080
       - ASTROMETRY_CONTAINER_NAME=astrometry-solver
     volumes:
@@ -17,7 +16,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
       # Mount astrometry index files (read-only)
-      - ${ASTROMETRY_INDEX_PATH:-/home/diarmuid/personal-code/astrometry-go-client/astrometry-data}:/data/indexes:ro
+      - ${ASTROMETRY_INDEX_PATH:-./astrometry-data}:/data/indexes:ro
 
       # Shared volume for file exchange with astrometry container
       - astrometry-shared:/shared-data
@@ -57,7 +56,7 @@ services:
     container_name: astrometry-solver
     volumes:
       # Mount astrometry index files (read-only)
-      - ${ASTROMETRY_INDEX_PATH:-/home/diarmuid/personal-code/astrometry-go-client/astrometry-data}:/usr/local/astrometry/data:ro
+      - ${ASTROMETRY_INDEX_PATH:-./astrometry-data}:/usr/local/astrometry/data:ro
 
       # Shared volume for file exchange with API server
       - astrometry-shared:/shared-data
