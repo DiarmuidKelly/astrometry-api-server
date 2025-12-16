@@ -438,5 +438,6 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 ## Acknowledgments
 
 - [Astrometry.net](http://astrometry.net/) project for the plate-solving engine
-- [dm90/astrometry](https://hub.docker.com/r/dm90/astrometry) for the containerized version
+- [astrometry-dockerised-solver](https://github.com/DiarmuidKelly/astrometry-dockerised-solver) for the maintained solver Docker image
 - [astrometry-go-client](https://github.com/DiarmuidKelly/astrometry-go-client) for the Go library
+- [dm90/astrometry](https://hub.docker.com/r/dm90/astrometry) for the original containerized version
