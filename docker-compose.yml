@@ -52,7 +52,7 @@ services:
           memory: 512M
 
   astrometry:
-    image: dm90/astrometry:latest
+    image: diarmuidk/astrometry-dockerised-solver:latest
     container_name: astrometry-solver
     volumes:
       # Mount astrometry index files (read-only)
