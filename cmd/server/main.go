@@ -66,12 +66,14 @@ func main() {
 	solveHandler := handlers.NewSolveHandler(astrometryClient, maxUploadSize)
 	analyseHandler := handlers.NewAnalyseHandler(maxUploadSize)
 	healthHandler := handlers.NewHealthHandler()
+	versionHandler := handlers.NewVersionHandler()
 
 	// Setup router
 	mux := http.NewServeMux()
 	mux.Handle("/solve", middleware.Logger(middleware.CORS(solveHandler)))
 	mux.Handle("/analyse", middleware.Logger(middleware.CORS(analyseHandler)))
 	mux.Handle("/health", middleware.Logger(healthHandler))
+	mux.Handle("/version", middleware.Logger(versionHandler))
 
 	// Swagger UI
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
