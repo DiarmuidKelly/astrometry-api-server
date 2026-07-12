@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -60,6 +61,12 @@ type SolveResponse struct {
 	SolveTime   float64           `json:"solve_time,omitempty"`
 	RawOutput   string            `json:"raw_output,omitempty"`
 	Error       string            `json:"error,omitempty"`
+
+	// AnnotatedImage is the base64-encoded annotated overlay (PNG), in the same
+	// orientation as the uploaded image. Populated only when annotate=true and
+	// the solve succeeded.
+	AnnotatedImage  string `json:"annotated_image,omitempty"`
+	AnnotatedFormat string `json:"annotated_format,omitempty"`
 }
 
 // ServeHTTP godoc
@@ -117,9 +124,9 @@ func (h *SolveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save to temporary file in shared directory (must match client's TempDir config)
-	tempDir := "/shared-data"
-	tempFile := filepath.Join(tempDir, fmt.Sprintf("astro_%d%s", os.Getpid(), ext))
+	// Save the upload to a temporary file. The client copies this into its own
+	// working directory before solving, so any writable dir is fine.
+	tempFile := filepath.Join(os.TempDir(), fmt.Sprintf("astro_%d%s", os.Getpid(), ext))
 	defer os.Remove(tempFile) //nolint:errcheck // Cleanup failure is not critical
 
 	out, err := os.Create(tempFile)
@@ -163,6 +170,10 @@ func (h *SolveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			response.FieldWidth = result.FieldWidth
 			response.FieldHeight = result.FieldHeight
 			response.WCSHeader = result.WCSHeader
+			if len(result.AnnotatedImage) > 0 {
+				response.AnnotatedImage = base64.StdEncoding.EncodeToString(result.AnnotatedImage)
+				response.AnnotatedFormat = result.AnnotatedFormat
+			}
 			log.Printf("Solved: RA=%.6f, Dec=%.6f, PixelScale=%.2f, Time=%.2fs",
 				result.RA, result.Dec, result.PixelScale, result.SolveTime)
 		} else {
@@ -227,6 +238,11 @@ func (h *SolveHandler) parseSolveOptions(r *http.Request) *client.SolveOptions {
 	if val := r.FormValue("keep_temp_files"); val != "" {
 		if b, err := strconv.ParseBool(val); err == nil {
 			opts.KeepTempFiles = b
+		}
+	}
+	if val := r.FormValue("annotate"); val != "" {
+		if b, err := strconv.ParseBool(val); err == nil {
+			opts.Annotate = b
 		}
 	}
 

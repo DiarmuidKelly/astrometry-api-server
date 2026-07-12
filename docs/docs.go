@@ -219,6 +219,32 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/version": {
+            "get": {
+                "description": "Returns the version of the solve-field binary",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Get Astrometry.net solver version",
+                "responses": {
+                    "200": {
+                        "description": "Version information",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VersionResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to get version",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.VersionResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -335,6 +361,17 @@ const docTemplate = `{
                     "additionalProperties": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "handlers.VersionResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
                 }
             }
         }

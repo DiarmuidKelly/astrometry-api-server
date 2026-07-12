@@ -43,18 +43,17 @@ func main() {
 	// Configuration from environment
 	indexPath := getEnv("ASTROMETRY_INDEX_PATH", "/data/indexes")
 	port := getEnv("PORT", "8080")
-	containerName := getEnv("ASTROMETRY_CONTAINER_NAME", "astrometry-solver")
+	tempDir := getEnv("ASTROMETRY_TEMP_DIR", os.TempDir())
 	maxUploadSize := int64(50 * 1024 * 1024) // 50MB default
 
-	// Create astrometry client with docker exec mode
-	// Note: Docker socket access required for containerized deployment
-	// See SECURITY.md for security considerations
+	// Create astrometry client in local-exec mode: solve-field is invoked
+	// directly on PATH. This server is built FROM the solver image, so the
+	// binaries and index config are present in-container — no docker.sock.
 	config := &client.ClientConfig{
-		IndexPath:     indexPath,
-		Timeout:       5 * time.Minute,
-		TempDir:       "/shared-data",
-		UseDockerExec: true,
-		ContainerName: containerName,
+		IndexPath: indexPath,
+		Timeout:   5 * time.Minute,
+		TempDir:   tempDir,
+		LocalExec: true,
 	}
 
 	astrometryClient, err := client.NewClient(config)
@@ -66,12 +65,14 @@ func main() {
 	solveHandler := handlers.NewSolveHandler(astrometryClient, maxUploadSize)
 	analyseHandler := handlers.NewAnalyseHandler(maxUploadSize)
 	healthHandler := handlers.NewHealthHandler()
+	versionHandler := handlers.NewVersionHandler()
 
 	// Setup router
 	mux := http.NewServeMux()
 	mux.Handle("/solve", middleware.Logger(middleware.CORS(solveHandler)))
 	mux.Handle("/analyse", middleware.Logger(middleware.CORS(analyseHandler)))
 	mux.Handle("/health", middleware.Logger(healthHandler))
+	mux.Handle("/version", middleware.Logger(versionHandler))
 
 	// Swagger UI
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
@@ -89,7 +90,7 @@ func main() {
 	go func() {
 		log.Printf("Starting Astrometry API Server on port %s", port)
 		log.Printf("Using index path: %s", indexPath)
-		log.Printf("Using docker exec mode with container: %s", containerName)
+		log.Printf("Using local-exec mode (solve-field on PATH), temp dir: %s", tempDir)
 		log.Printf("Swagger UI available at: http://localhost:%s/swagger/", port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server failed: %v", err)

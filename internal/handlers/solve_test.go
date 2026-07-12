@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"mime/multipart"
@@ -17,11 +18,6 @@ import (
 )
 
 func TestSolveHandler_Success(t *testing.T) {
-	// Ensure /shared-data exists for the test
-	if err := os.MkdirAll("/shared-data", 0755); err != nil {
-		t.Skip("Cannot create /shared-data directory, skipping test")
-	}
-
 	mockClient := &MockAstroClient{
 		SolveFunc: func(ctx context.Context, imagePath string, opts *client.SolveOptions) (*client.Result, error) {
 			return &client.Result{
@@ -66,11 +62,6 @@ func TestSolveHandler_Success(t *testing.T) {
 }
 
 func TestSolveHandler_NoSolution(t *testing.T) {
-	// Ensure /shared-data exists for the test
-	if err := os.MkdirAll("/shared-data", 0755); err != nil {
-		t.Skip("Cannot create /shared-data directory, skipping test")
-	}
-
 	mockClient := &MockAstroClient{
 		SolveFunc: func(ctx context.Context, imagePath string, opts *client.SolveOptions) (*client.Result, error) {
 			return &client.Result{
@@ -207,11 +198,6 @@ func TestSolveHandler_InvalidFileType(t *testing.T) {
 }
 
 func TestSolveHandler_ParameterParsing(t *testing.T) {
-	// Ensure /shared-data exists for the test
-	if err := os.MkdirAll("/shared-data", 0755); err != nil {
-		t.Skip("Cannot create /shared-data directory, skipping test")
-	}
-
 	var capturedOpts *client.SolveOptions
 	mockClient := &MockAstroClient{
 		SolveFunc: func(ctx context.Context, imagePath string, opts *client.SolveOptions) (*client.Result, error) {
@@ -259,6 +245,65 @@ func TestSolveHandler_ParameterParsing(t *testing.T) {
 
 	if capturedOpts.Dec != -5.9 {
 		t.Errorf("expected Dec -5.9, got %f", capturedOpts.Dec)
+	}
+}
+
+func TestSolveHandler_Annotate(t *testing.T) {
+	pngBytes := []byte("\x89PNG\r\n\x1a\nfake-annotated-overlay")
+
+	var capturedOpts *client.SolveOptions
+	mockClient := &MockAstroClient{
+		SolveFunc: func(ctx context.Context, imagePath string, opts *client.SolveOptions) (*client.Result, error) {
+			capturedOpts = opts
+			return &client.Result{
+				Solved:          true,
+				RA:              83.421,
+				Dec:             -5.891,
+				AnnotatedImage:  pngBytes,
+				AnnotatedFormat: "png",
+			}, nil
+		},
+	}
+
+	handler := NewSolveHandler(mockClient, 50*1024*1024)
+
+	testImage := createTestJPEG(t)
+	defer os.Remove(testImage)
+
+	body, contentType := createMultipartRequestWithParams(t, "image", testImage, map[string]string{
+		"annotate": "true",
+	})
+	req := httptest.NewRequest(http.MethodPost, "/solve", body)
+	req.Header.Set("Content-Type", contentType)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", w.Code)
+	}
+
+	// The annotate form field must reach the solve options.
+	if capturedOpts == nil || !capturedOpts.Annotate {
+		t.Fatalf("expected Annotate=true in captured opts, got %+v", capturedOpts)
+	}
+
+	var response SolveResponse
+	if err := json.NewDecoder(w.Body).Decode(&response); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+
+	if response.AnnotatedFormat != "png" {
+		t.Errorf("expected annotated_format png, got %q", response.AnnotatedFormat)
+	}
+
+	// The base64 payload must round-trip back to the original bytes.
+	decoded, err := base64.StdEncoding.DecodeString(response.AnnotatedImage)
+	if err != nil {
+		t.Fatalf("annotated_image is not valid base64: %v", err)
+	}
+	if !bytes.Equal(decoded, pngBytes) {
+		t.Errorf("decoded annotated image does not match original bytes")
 	}
 }
 

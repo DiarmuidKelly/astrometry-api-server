@@ -76,6 +76,13 @@ definitions:
           type: string
         type: object
     type: object
+  handlers.VersionResponse:
+    properties:
+      error:
+        type: string
+      version:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -226,6 +233,23 @@ paths:
       summary: Plate-solve an astronomical image using offline Astrometry.net engine
       tags:
       - Solving
+  /version:
+    get:
+      description: Returns the version of the solve-field binary
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Version information
+          schema:
+            $ref: '#/definitions/handlers.VersionResponse'
+        "500":
+          description: Failed to get version
+          schema:
+            $ref: '#/definitions/handlers.VersionResponse'
+      summary: Get Astrometry.net solver version
+      tags:
+      - Health
 schemes:
 - http
 swagger: "2.0"
