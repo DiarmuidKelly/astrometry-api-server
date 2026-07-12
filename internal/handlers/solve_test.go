@@ -18,11 +18,6 @@ import (
 )
 
 func TestSolveHandler_Success(t *testing.T) {
-	// Ensure /shared-data exists for the test
-	if err := os.MkdirAll("/shared-data", 0755); err != nil {
-		t.Skip("Cannot create /shared-data directory, skipping test")
-	}
-
 	mockClient := &MockAstroClient{
 		SolveFunc: func(ctx context.Context, imagePath string, opts *client.SolveOptions) (*client.Result, error) {
 			return &client.Result{
@@ -67,11 +62,6 @@ func TestSolveHandler_Success(t *testing.T) {
 }
 
 func TestSolveHandler_NoSolution(t *testing.T) {
-	// Ensure /shared-data exists for the test
-	if err := os.MkdirAll("/shared-data", 0755); err != nil {
-		t.Skip("Cannot create /shared-data directory, skipping test")
-	}
-
 	mockClient := &MockAstroClient{
 		SolveFunc: func(ctx context.Context, imagePath string, opts *client.SolveOptions) (*client.Result, error) {
 			return &client.Result{
@@ -208,11 +198,6 @@ func TestSolveHandler_InvalidFileType(t *testing.T) {
 }
 
 func TestSolveHandler_ParameterParsing(t *testing.T) {
-	// Ensure /shared-data exists for the test
-	if err := os.MkdirAll("/shared-data", 0755); err != nil {
-		t.Skip("Cannot create /shared-data directory, skipping test")
-	}
-
 	var capturedOpts *client.SolveOptions
 	mockClient := &MockAstroClient{
 		SolveFunc: func(ctx context.Context, imagePath string, opts *client.SolveOptions) (*client.Result, error) {

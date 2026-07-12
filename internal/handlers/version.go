@@ -36,13 +36,13 @@ func (h *VersionHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err != nil {
-		json.NewEncoder(w).Encode(VersionResponse{
+		_ = json.NewEncoder(w).Encode(VersionResponse{ //nolint:errcheck // error path, encode failure indicates a dead connection
 			Error: err.Error(),
 		})
 		return
 	}
 
-	json.NewEncoder(w).Encode(VersionResponse{
+	_ = json.NewEncoder(w).Encode(VersionResponse{ //nolint:errcheck // encode failure indicates a dead connection
 		Version: output,
 	})
 }

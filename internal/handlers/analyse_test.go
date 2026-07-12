@@ -13,11 +13,6 @@ import (
 )
 
 func TestAnalyseHandler_Success(t *testing.T) {
-	// Ensure /shared-data exists for the test
-	if err := os.MkdirAll("/shared-data", 0755); err != nil {
-		t.Skip("Cannot create /shared-data directory, skipping test")
-	}
-
 	// Create a test JPEG with EXIF data
 	testImage := createTestJPEG(t)
 	defer os.Remove(testImage)
