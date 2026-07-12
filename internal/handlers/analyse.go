@@ -94,9 +94,8 @@ func (h *AnalyseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save to temporary file in shared directory (must match client's TempDir config)
-	tempDir := "/shared-data"
-	tempFile := filepath.Join(tempDir, fmt.Sprintf("analyse_%d%s", os.Getpid(), ext))
+	// Save the upload to a temporary file. Any writable dir is fine.
+	tempFile := filepath.Join(os.TempDir(), fmt.Sprintf("analyse_%d%s", os.Getpid(), ext))
 	defer os.Remove(tempFile) //nolint:errcheck // Cleanup failure is not critical
 
 	out, err := os.Create(tempFile)
